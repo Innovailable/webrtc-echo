@@ -138,7 +138,7 @@ class exports.EchoPeer
         remove_line()
 
       else if m = line.match(/a=setup:actpass/)
-        # we are acting a dtls client
+        # we are acting as dtls client
         lines[i] = 'a=setup:active'
 
       else if m = line.match(/a=candidate:(.*)/)
