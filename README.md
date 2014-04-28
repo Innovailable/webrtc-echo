@@ -12,7 +12,7 @@ replaced with any other signaling server.
 
 The project uses libsrtp, OpenSSL, and libnice. The business logic is written in
 coffeescript, which also offers an HTTP interface to invite an echo instance
-into a room and a test page.
+into a room, and a test page.
 
 ## Setup
 
