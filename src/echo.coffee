@@ -22,8 +22,8 @@
 
 STUN_ADDRESS = process.env.STUN_ADDRESS ? "176.28.9.212"
 
-CERT_FILE = "cert.pem"
-KEY_FILE = "key.pem"
+CERT_FILE = process.env.CERT_FILE ? "cert.pem"
+KEY_FILE = process.env.KEY_FILE ? "key.pem"
 
 # init
 
