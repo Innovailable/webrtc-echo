@@ -138,16 +138,20 @@ class exports.EchoPeer
         remove_line()
 
       else if m = line.match(/a=setup:actpass/)
+        # we are acting a dtls client
         lines[i] = 'a=setup:active'
 
       else if m = line.match(/a=candidate:(.*)/)
+        # add incoming candidates to libnice
         stream.nice.addRemoteIceCandidate line
         remove_line()
 
       else if m = line.match(/a=crypto:(.*)/)
+        # we are using dtls-srtp, so this line has to go
         remove_line()
 
       else if m = line.match(/a=fingerprint:/)
+        # replace fingerprint of the peer with our own
         lines[i] = 'a=fingerprint:' + stream.dtls_srtp.fingerprint()
 
       i++
