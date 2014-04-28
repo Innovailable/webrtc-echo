@@ -1,0 +1,6 @@
+*.swp
+build
+node_modules
+core
+vgcore.*
+public/bower/
