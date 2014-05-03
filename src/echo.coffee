@@ -33,7 +33,8 @@ DtlsSrtp = require('./dtls_srtp').DtlsSrtp
 log = (msg) => console.log '[echo] ' + msg
 
 nice = new NiceAgent "rfc5245"
-nice.setStunServer STUN_ADDRESS
+nice.setStunServer(STUN_ADDRESS)
+nice.setControlling(false)
 
 class exports.EchoPeer
 
@@ -176,4 +177,5 @@ class exports.EchoPeer
     console.log 'closing echo'
     for _, stream of @streams
       stream.nice.close()
+      stream.dtls_srtp.close()
 

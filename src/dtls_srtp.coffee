@@ -28,6 +28,8 @@ class exports.DtlsSrtp extends EventEmitter
   constructor: (@stream, cert_file, key_file) ->
     @dtls = new Dtls(cert_file, key_file)
 
+    @ready = false
+
     @initStream()
     @initDtls()
 
@@ -48,10 +50,19 @@ class exports.DtlsSrtp extends EventEmitter
 
       @srtp = new Srtp(sendKey, recvKey)
 
+      clearInterval @dtls_timer
+      delete @dtls_timer
+
       delete @dtls
+
+    tick = () => if @ready then @dtls.tick()
+    @dtls_timer = setInterval tick, 100
 
   initStream: () ->
     @stream.on 'receive', (component, data) =>
+      if not @ready
+        return
+
       if @dtls
         # dtls handshake
         @dtls.decrypt data
@@ -65,6 +76,7 @@ class exports.DtlsSrtp extends EventEmitter
 
     @stream.on 'stateChanged', (component, state) =>
       if component == 1 and state == 'ready'
+        @ready = true
         @connect()
 
   setRtpPayloads: (payloads) ->
@@ -76,19 +88,22 @@ class exports.DtlsSrtp extends EventEmitter
   fingerprint: () -> @dtls.fingerprint()
 
   connect: () ->
-    if !@dtls
+    if !@dtls?
       console.log "trying to connect but dtls does not exist"
       return
 
     @dtls.connect()
 
   rtp: (data) ->
-    if !@srtp then throw "dtls-srtp not ready to send"
+    if !@srtp? then throw "dtls-srtp not ready to send"
 
     @stream.send 1, @srtp.protectRtp(data)
 
   rtcp: (data) ->
-    if !@srtp then throw "dtls-srtp not ready to send"
+    if !@srtp? then throw "dtls-srtp not ready to send"
 
     @stream.send 2, @srtp.protectRtcp(data)
+
+  close: () ->
+    if @dtls_timer? then clearInterval @dtls_timer
 
