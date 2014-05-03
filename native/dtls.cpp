@@ -314,7 +314,7 @@ v8::Handle<v8::Value> Dtls::fingerprint(const v8::Arguments& args) {
 			ss << ":";
 		}
 
-		ss << std::hex << std::setfill('0') << std::setw(2) << (int) buf[i];
+		ss << std::hex << std::uppercase << std::setfill('0') << std::setw(2) << (int) buf[i];
 	}
 
 	return scope.Close(String::New(ss.str().c_str()));
