@@ -25,7 +25,7 @@ Buffer = require('buffer').Buffer
 
 class exports.DtlsSrtp extends EventEmitter
 
-  constructor: (@stream, cert_file, key_file) ->
+  constructor: (@stream, cert_file, key_file, @rtcp_mux=false) ->
     @dtls = new Dtls(cert_file, key_file)
 
     @ready = false
@@ -102,7 +102,12 @@ class exports.DtlsSrtp extends EventEmitter
   rtcp: (data) ->
     if !@srtp? then throw "dtls-srtp not ready to send"
 
-    @stream.send 2, @srtp.protectRtcp(data)
+    if @rtcp_mux
+      component = 1
+    else
+      component = 2
+
+    @stream.send component, @srtp.protectRtcp(data)
 
   close: () ->
     if @dtls_timer? then clearInterval @dtls_timer

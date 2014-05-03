@@ -143,6 +143,10 @@ class exports.EchoPeer
         # we are acting as dtls client
         lines[i] = 'a=setup:active'
 
+      else if m = line.match(/a=rtcp-mux/)
+        # enable rtcp muxing in the dtls srtp stack
+        stream.dtls_srtp.rtcp_mux = true
+
       else if m = line.match(/a=candidate:(.*)/)
         # add incoming candidates to libnice
         stream.nice.addRemoteIceCandidate line
