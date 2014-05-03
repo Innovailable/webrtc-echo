@@ -26,7 +26,7 @@ $ ->
     invite_echo(room)
 
   session.on 'peer_stream_ready', (peer) ->
-    if peer.isLocal()
+    if !peer.isLocal()
       element = $("<li id='#{peer.id}'><video width='800px' autoplay></video></li>")
       $('#video').append(element)
 
