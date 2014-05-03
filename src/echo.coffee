@@ -69,6 +69,7 @@ class exports.EchoPeer
         credentials = stream.nice.getLocalCredentials()
         insert_line 'a=ice-ufrag:' + credentials.ufrag
         insert_line 'a=ice-pwd:' + credentials.pwd
+        insert_line 'a=fingerprint:' + stream.dtls_srtp.fingerprint()
         delete stream.needs_ice_cred
 
       if m = line.match(/m=(\w+) \S+ \S+ (.*)/)
@@ -152,8 +153,8 @@ class exports.EchoPeer
         remove_line()
 
       else if m = line.match(/a=fingerprint:/)
-        # replace fingerprint of the peer with our own
-        lines[i] = 'a=fingerprint:' + stream.dtls_srtp.fingerprint()
+        # remove fingerprint, we add our own above
+        remove_line()
 
       i++
 
