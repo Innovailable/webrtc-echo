@@ -40,11 +40,12 @@ static void createSession(srtp_t *session, const char *key, ssrc_type_t directio
 
 	policy.key = (unsigned char*) key;
 
+	policy.window_size = 0;
+	policy.allow_repeat_tx = 1;
+
 	policy.next = NULL;
 
-	int res = srtp_create(session, &policy);
-
-	DEBUG("creating session " << res);
+	srtp_create(session, &policy);
 }
 
 Srtp::Srtp(const char *sendKey, const char *recvKey) {
