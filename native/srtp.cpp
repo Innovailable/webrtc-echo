@@ -40,7 +40,7 @@ static void createSession(srtp_t *session, const char *key, ssrc_type_t directio
 
 	policy.key = (unsigned char*) key;
 
-	policy.window_size = 0;
+	//policy.window_size = 0;
 	policy.allow_repeat_tx = 1;
 
 	policy.next = NULL;
