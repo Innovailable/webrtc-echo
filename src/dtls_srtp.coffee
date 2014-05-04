@@ -69,10 +69,17 @@ class exports.DtlsSrtp extends EventEmitter
       else
         pt = data[1] & 0x7f
 
-        if component == 1 and (not @rtpPayloads or @rtpPayloads[pt])
-          @emit 'rtp', @srtp.unprotectRtp(data)
-        else
-          @emit 'rtcp', @srtp.unprotectRtcp(data)
+        rtp = component == 1 and (not @rtpPayloads or @rtpPayloads[pt])
+
+        try
+          if rtp
+            #console.log 'rtp'
+            @emit 'rtp', @srtp.unprotectRtp(data)
+          else
+            #console.log 'rtcp'
+            @emit 'rtcp', @srtp.unprotectRtcp(data)
+        catch e
+          console.log 'srtp error ' + e
 
     @stream.on 'stateChanged', (component, state) =>
       if component == 1 and state == 'ready'
@@ -97,7 +104,11 @@ class exports.DtlsSrtp extends EventEmitter
   rtp: (data) ->
     if !@srtp? then throw "dtls-srtp not ready to send"
 
-    @stream.send 1, @srtp.protectRtp(data)
+    try
+      res = @stream.send 1, @srtp.protectRtp(data)
+      return res > 0
+    catch e
+      return false
 
   rtcp: (data) ->
     if !@srtp? then throw "dtls-srtp not ready to send"
@@ -107,7 +118,11 @@ class exports.DtlsSrtp extends EventEmitter
     else
       component = 2
 
-    @stream.send component, @srtp.protectRtcp(data)
+    try
+      res = @stream.send component, @srtp.protectRtcp(data)
+      return res > 0
+    catch e
+      return false
 
   close: () ->
     if @dtls_timer? then clearInterval @dtls_timer

@@ -18,11 +18,41 @@
 
 #include "srtp.h"
 
+#include <map>
+
 #include <node_buffer.h>
 
 #include "helper.h"
 
 using namespace v8;
+
+static std::map<err_status_t,const char*> error_map = {
+	{ err_status_ok, "ok" },
+	{ err_status_fail, "fail" },
+	{ err_status_bad_param, "bad_param" },
+	{ err_status_alloc_fail, "status_alloc_fail" },
+	{ err_status_dealloc_fail, "status_dealloc_fail" },
+	{ err_status_init_fail, "init_fail" },
+	{ err_status_terminus, "terminus" },
+	{ err_status_auth_fail, "auth_fail" },
+	{ err_status_cipher_fail, "cipher_fail" },
+	{ err_status_replay_fail, "replay_fail" },
+	{ err_status_replay_old, "replay_old" },
+	{ err_status_algo_fail, "algo_fail" },
+	{ err_status_no_such_op, "no_such_op" },
+	{ err_status_no_ctx, "no_ctx" },
+	{ err_status_cant_check, "cant_check" },
+	{ err_status_key_expired, "key_expired" },
+	{ err_status_socket_err, "socket_err" },
+	{ err_status_signal_err, "signal_err" },
+	{ err_status_nonce_bad, "nonce_bad" },
+	{ err_status_read_fail, "read_fail" },
+	{ err_status_write_fail, "write_fail" },
+	{ err_status_parse_err, "parse_err" },
+	{ err_status_encode_err, "encode_err" },
+	{ err_status_semaphore_err, "semaphore_err" },
+	{ err_status_pfkey_err, "pfkey_err" },
+};
 
 v8::Persistent<v8::Function> Srtp::constructor;
 bool Srtp::initialized = false;
@@ -127,7 +157,16 @@ v8::Handle<v8::Value> Srtp::convert(const v8::Arguments& args, srtp_t session, c
 	err_status_t err = fun(session, out_buf, &size);
 
 	if(err != err_status_ok) {
-		DEBUG("srtp error " << err);
+		const char *err_str;
+		auto it = error_map.find(err);
+
+		if(it != error_map.end()) {
+			err_str = it->second;
+		} else {
+			err_str = "unknown";
+		}
+
+		return ThrowException(String::New(err_str));
 	}
 
 	// return slice of the right size
@@ -135,7 +174,7 @@ v8::Handle<v8::Value> Srtp::convert(const v8::Arguments& args, srtp_t session, c
 	Handle<Value> slice_v = tmp->Get(String::New("slice")); 
 
 	if(!slice_v->IsFunction()) {
-		return ThrowException(Exception::Error(String::New("Buffer does not have a slice function")));
+		return ThrowException(String::New("v8_error"));
 	}
 
 	Handle<v8::Function> slice_f = v8::Handle<v8::Function>::Cast(slice_v);
