@@ -30,6 +30,8 @@ $ ->
       element = $("<li id='#{peer.id}'><video width='800px' autoplay></video></li>")
       $('#video').append(element)
 
+      console.log 'incoming'
+
       palava.browser.attachMediaStream(element.children('video')[0], peer.getStream())
 
   session.on 'peer_left', (peer) ->

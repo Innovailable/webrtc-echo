@@ -26,6 +26,7 @@ BIND_HOST = process.env.BIND_HOST ? "0.0.0.0"
 
 express = require 'express'
 connect = require 'connect'
+serve_static = require 'connect'
 
 PalavaRoom = require('./palava').PalavaRoom
 
@@ -36,8 +37,8 @@ app = express()
 app.configure () =>
   app.set 'views', __dirname + '/../views'
   app.use require('connect-assets')()
-  app.use connect.static __dirname + '/../public'
-  app.use connect.static __dirname + '/../support/public'
+  app.use serve_static __dirname + '/../public'
+  app.use serve_static __dirname + '/../support/public'
   app.use express.bodyParser()
 
 # test page
