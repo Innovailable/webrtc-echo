@@ -27,6 +27,7 @@ BIND_HOST = process.env.BIND_HOST ? "0.0.0.0"
 express = require 'express'
 connect = require 'connect'
 serve_static = require 'connect'
+cors = require 'cors'
 
 PalavaRoom = require('./palava').PalavaRoom
 
@@ -40,6 +41,7 @@ app.configure () =>
   app.use serve_static __dirname + '/../public'
   app.use serve_static __dirname + '/../support/public'
   app.use express.bodyParser()
+  app.use cors()
 
 # test page
 
