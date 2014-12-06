@@ -92,6 +92,7 @@ class exports.EchoPeer
         }
 
         # send candidates when gathered
+        # TODO: move to trickling ...
 
         gatheringDone = (stream) => (candidates) =>
           log stream.id + " gathering done"
@@ -171,9 +172,6 @@ class exports.EchoPeer
       stream.dtls_srtp.setRtpPayloads(rtp_types)
 
     answer = lines.join('\r\n')
-
-    #console.log '========'
-    #console.log answer
 
     @signaling.sendAnswer answer
 
