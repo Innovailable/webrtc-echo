@@ -29,6 +29,7 @@ KEY_FILE = process.env.KEY_FILE ? "key.pem"
 
 NiceAgent = require('libnice').NiceAgent
 DtlsSrtp = require('./dtls_srtp').DtlsSrtp
+Dtls = require('./dtls').Dtls
 
 log = (msg) => console.log '[echo] ' + msg
 
@@ -65,29 +66,29 @@ class exports.EchoPeer
         lines.splice i, 0, data
         i++
 
-      if stream.needs_ice_cred and line.match(/a=.*/)
+      if stream.needs_ice_cred and line.match(/a=.*/) and not line.match(/a=crypto.*/)
         credentials = stream.nice.getLocalCredentials()
         insert_line 'a=ice-ufrag:' + credentials.ufrag
         insert_line 'a=ice-pwd:' + credentials.pwd
-        insert_line 'a=fingerprint:' + stream.dtls_srtp.fingerprint()
+        insert_line 'a=fingerprint:' + stream.transport.fingerprint()
         delete stream.needs_ice_cred
 
-      if m = line.match(/m=(\w+) \S+ \S+ (.*)/)
+      if m = line.match(/m=(\w+) \S+ (\S+) (.*)/)
         # m-lines describe a media stream, create nice connections for them
 
-        id = m[1]
+
+        [_, id, profile, types] = m
+
         index = mline
 
         mline++
 
         nice_stream = nice.createStream(2)
-        dtls_srtp = new DtlsSrtp(nice_stream, CERT_FILE, KEY_FILE)
 
         stream = {
           id: id
           index: index
           nice: nice_stream
-          dtls_srtp: dtls_srtp
           needs_ice_cred: true
         }
 
@@ -108,21 +109,53 @@ class exports.EchoPeer
 
         nice_stream.on 'stateChanged', stateChanged stream
 
-        # mirroring
+        if profile == 'DTLS/SCTP'
+          console.log 'doing dtls stuff!', line
 
-        rtp = (stream) => (data) =>
-          stream.dtls_srtp.rtp data
+          dtls = new Dtls(CERT_FILE, KEY_FILE)
 
-        dtls_srtp.on 'rtp', rtp(stream)
+          nice_stream.on 'receive', (component, data) =>
+            console.log 'IN', data.length
+            stream.transport.decrypt(data)
 
-        rtcp = (stream) => (data) =>
-          stream.dtls_srtp.rtcp data
+          dtls.on 'encrypted', (data) =>
+            console.log 'ENC', data.length
+            stream.nice.send(1, data)
 
-        dtls_srtp.on 'rtcp', rtcp(stream)
+          dtls.on 'decrypted', (data) =>
+            console.log 'DEC', data.length
+            stream.transport.encrypt(data)
+
+          nice_stream.on 'stateChanged', (component, state) ->
+            console.log 'STATE', state
+            if component == 1 and state == 'ready'
+              console.log 'CON'
+              tick = () => stream.transport.tick()
+              @dtls_timer = setInterval tick, 100
+
+          stream.transport = dtls
+
+        else
+          # dtls srtp is assumed
+
+          dtls_srtp = new DtlsSrtp(nice_stream, CERT_FILE, KEY_FILE)
+
+          # mirroring
+          rtp = (stream) => (data) =>
+            stream.transport.rtp data
+
+          dtls_srtp.on 'rtp', rtp(stream)
+
+          rtcp = (stream) => (data) =>
+            stream.transport.rtcp data
+
+          dtls_srtp.on 'rtcp', rtcp(stream)
+
+          stream.transport = dtls_srtp
 
         # save payload types for rtpmux
 
-        rtp_types = rtp_types.concat(parseInt(type) for type in m[2].split(" "))
+        rtp_types = rtp_types.concat(parseInt(type) for type in types.split(" "))
 
       else if m = line.match(/a=mid:(.*)/)
         stream.mid = m[1]
@@ -148,7 +181,7 @@ class exports.EchoPeer
 
       else if m = line.match(/a=rtcp-mux/)
         # enable rtcp muxing in the dtls srtp stack
-        stream.dtls_srtp.rtcp_mux = true
+        stream.transport.rtcp_mux = true
 
       else if m = line.match(/a=candidate:(.*)/)
         # add incoming candidates to libnice
@@ -163,13 +196,18 @@ class exports.EchoPeer
         # remove fingerprint, we add our own above
         remove_line()
 
+      else if m = line.match(/a=group:BUNDLE .*/)
+        # this is disabled for now because of datachannels
+        # TODO: figure out how to handle this correctly ...
+        remove_line()
+
       i++
 
     for id, stream of @streams
       stream.nice.setRemoteCredentials(stream.ufrag ? global.ufrag, stream.pwd ? global.pwd)
       stream.nice.gatherCandidates()
 
-      stream.dtls_srtp.setRtpPayloads(rtp_types)
+      stream.transport.setRtpPayloads?(rtp_types)
 
     answer = lines.join('\r\n')
 
@@ -182,5 +220,5 @@ class exports.EchoPeer
     console.log 'closing echo'
     for _, stream of @streams
       stream.nice.close()
-      stream.dtls_srtp.close()
+      stream.transport.close()
 
