@@ -214,6 +214,9 @@ class exports.EchoPeer
     @signaling.sendAnswer answer
 
   addIceCandidate: (id, index, candidate) ->
+    if candidate.indexOf("a=") != 0
+      candidate = "a=" + candidate
+
     @streams[id]?.nice?.addRemoteIceCandidate candidate
 
   close: () ->
