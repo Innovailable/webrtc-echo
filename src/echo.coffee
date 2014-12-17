@@ -119,19 +119,18 @@ class exports.EchoPeer
             stream.transport.decrypt(data)
 
           dtls.on 'encrypted', (data) =>
-            console.log 'ENC', data.length
             stream.nice.send(1, data)
 
           dtls.on 'decrypted', (data) =>
-            console.log 'DEC', data.length
             stream.transport.encrypt(data)
 
+          dtls.on 'connected', () =>
+            clearInterval stream.timer
+
           nice_stream.on 'stateChanged', (component, state) ->
-            console.log 'STATE', state
             if component == 1 and state == 'ready'
-              console.log 'CON'
               tick = () => stream.transport.tick()
-              @dtls_timer = setInterval tick, 100
+              stream.timer = setInterval tick, 100
 
           stream.transport = dtls
 
