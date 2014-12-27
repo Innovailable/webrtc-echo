@@ -87,12 +87,13 @@ class exports.EchoPeer
 
         stream = {
           id: id
+          mid: id
           index: index
           nice: nice_stream
           needs_ice_cred: true
         }
 
-        @streams[m[1]] = stream
+        @streams[index] = stream
 
         # send candidates when gathered
         # TODO: move to trickling ...
@@ -100,7 +101,7 @@ class exports.EchoPeer
         gatheringDone = (stream) => (candidates) =>
           log stream.id + " gathering done"
           for candidate in candidates
-            @signaling.sendCandidate stream.id, stream.index, candidate + '\r\n'
+            @signaling.sendCandidate stream.mid, stream.index, candidate + '\r\n'
 
         nice_stream.on 'gatheringDone', gatheringDone stream
 
@@ -158,6 +159,9 @@ class exports.EchoPeer
 
         rtp_types = rtp_types.concat(parseInt(type) for type in types.split(" "))
 
+      else if m = line.match(/a=mid:(.*)/)
+        stream.mid = m[1]
+
       else if m = line.match(/a=ice-ufrag:(.*)/)
         # replace and apply ufrag
         stream.ufrag = m[1]
@@ -214,7 +218,7 @@ class exports.EchoPeer
     if candidate.indexOf("a=") != 0
       candidate = "a=" + candidate
 
-    @streams[id]?.nice?.addRemoteIceCandidate candidate
+    @streams[index]?.nice?.addRemoteIceCandidate candidate
 
   close: () ->
     console.log 'closing echo'
