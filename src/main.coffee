@@ -30,6 +30,7 @@ serve_static = require 'connect'
 cors = require 'cors'
 
 PalavaRoom = require('./palava').PalavaRoom
+version = require('./version')
 
 # initalize express
 
@@ -53,7 +54,11 @@ app.post '/invite.json', (req, res) =>
 
   if room
     new PalavaRoom(room, 10 * 60 * 1000)
-    res.send { success: true }
+    res.send {
+      success: true
+      version: version.version
+      commit: version.commit
+    }
   else
     res.status 500
     res.send { error: "no room given" }

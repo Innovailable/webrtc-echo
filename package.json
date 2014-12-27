@@ -8,6 +8,7 @@
     "connect": "^3.2.0",
     "connect-assets": "^4.3.3",
     "cors": "^2.5.2",
+    "exec-sync": "^0.1.6",
     "express": "^3.17.5",
     "jade": "^1.7.0",
     "libnice": "^0.1.4",
