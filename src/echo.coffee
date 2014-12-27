@@ -92,13 +92,15 @@ class exports.EchoPeer
           needs_ice_cred: true
         }
 
+        @streams[m[1]] = stream
+
         # send candidates when gathered
         # TODO: move to trickling ...
 
         gatheringDone = (stream) => (candidates) =>
           log stream.id + " gathering done"
           for candidate in candidates
-            @signaling.sendCandidate stream.mid, stream.index, candidate + '\r\n'
+            @signaling.sendCandidate stream.id, stream.index, candidate + '\r\n'
 
         nice_stream.on 'gatheringDone', gatheringDone stream
 
@@ -155,10 +157,6 @@ class exports.EchoPeer
         # save payload types for rtpmux
 
         rtp_types = rtp_types.concat(parseInt(type) for type in types.split(" "))
-
-      else if m = line.match(/a=mid:(.*)/)
-        stream.mid = m[1]
-        @streams[stream.mid] = stream
 
       else if m = line.match(/a=ice-ufrag:(.*)/)
         # replace and apply ufrag
