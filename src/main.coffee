@@ -32,45 +32,48 @@ cors = require 'cors'
 PalavaRoom = require('./palava').PalavaRoom
 version = require('./version')
 
-# initalize express
+version.get_version (err, version) ->
+  # initalize express
 
-app = express()
+  app = express()
 
-app.configure () =>
-  app.set 'views', __dirname + '/../views'
-  app.use require('connect-assets')()
-  app.use serve_static __dirname + '/../public'
-  app.use serve_static __dirname + '/../support/public'
-  app.use express.bodyParser()
-  app.use cors()
+  app.configure () =>
+    app.set 'views', __dirname + '/../views'
+    app.use require('connect-assets')()
+    app.use serve_static __dirname + '/../public'
+    app.use serve_static __dirname + '/../support/public'
+    app.use express.bodyParser()
+    app.use cors()
 
-# test page
+  # test page
 
-app.get '/', (req, res) =>
-  res.render 'index.jade'
+  app.get '/', (req, res) =>
+    res.render 'index.jade'
 
-app.post '/invite.json', (req, res) =>
-  room = req.body.room
+  console.log version
 
-  if room
-    new PalavaRoom(room, 10 * 60 * 1000)
-    res.send {
-      success: true
-      version: version.version
-      commit: version.commit
-    }
-  else
-    res.status 500
-    res.send { error: "no room given" }
+  app.post '/invite.json', (req, res) =>
+    room = req.body.room
 
-# actually start
+    if room
+      new PalavaRoom(room, 10 * 60 * 1000)
+      res.send {
+        success: true
+        version: version.version
+        commit: version.commit
+      }
+    else
+      res.status 500
+      res.send { error: "no room given" }
 
-console.log "Listening on " + BIND_HOST + ":" + BIND_PORT
-app.listen BIND_PORT, BIND_HOST
+  # actually start
 
-#doGcStuff = () =>
-  #log 'doing gc stuff'
-  #gc()
+  console.log "Listening on " + BIND_HOST + ":" + BIND_PORT
+  app.listen BIND_PORT, BIND_HOST
 
-#setInterval doGcStuff, 5000
+  #doGcStuff = () =>
+    #log 'doing gc stuff'
+    #gc()
+
+  #setInterval doGcStuff, 5000
 

@@ -18,9 +18,32 @@
 #
 ###############################################################################
 
-exec_sync = require('exec-sync')
+child_process = require('child_process')
 fs = require('fs')
+async = require('async')
 
-exports.version = JSON.parse(fs.readFileSync(__dirname + '/../package.json', 'utf-8')).version
-exports.commit = exec_sync('git rev-parse HEAD')
+exports.get_version = (cb) ->
+  res = {}
+
+  funs = [
+    # read version from file
+    (cb) ->
+      fs.readFile __dirname + '/../package.json', 'utf-8', (err, data) ->
+        if err
+          cb(err)
+        else
+          res.version = JSON.parse(data).version
+          cb()
+    # get commit from git call
+    (cb) ->
+      child_process.exec 'git rev-parse HEAD', {cwd: __dirname + '/../'}, (err, stdout, stderr) ->
+        if err
+          cb(err)
+        else
+          res.commit = stdout
+          cb()
+  ]
+
+  async.parallel funs, (err) ->
+    cb(err, res)
 
