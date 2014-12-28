@@ -21,6 +21,6 @@
 exec_sync = require('exec-sync')
 fs = require('fs')
 
-exports.version = JSON.parse(fs.readFileSync('package.json', 'utf-8')).version
+exports.version = JSON.parse(fs.readFileSync(__dirname + '/../package.json', 'utf-8')).version
 exports.commit = exec_sync('git rev-parse HEAD')
 
